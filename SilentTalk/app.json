@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "SilentTalk",
+    "slug": "sign-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/sign-language-icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/sign-language-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#e7a1a7"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/sign-language-icon.png",
+        "backgroundColor": "#e7a1a7"
+      }
+    },
+    "web": {
+      "favicon": "./assets/sign-language-icon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to record sign language videos.",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone to record sign language videos."
+        }
+      ]
+    ]
+  }
+} 

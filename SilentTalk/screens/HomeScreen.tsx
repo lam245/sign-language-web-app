@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [confidence, setConfidence] = useState<number | null>(null);
-  const [serverStatus, setServerStatus] = useState<{
+  const [serviceStatus, setServiceStatus] = useState<{
     status: 'ready' | 'processing' | 'offline';
     modelAvailable: boolean;
   }>({ status: 'ready', modelAvailable: true });
@@ -50,8 +50,8 @@ export default function HomeScreen() {
   useEffect(() => {
     const initMockService = async () => {
       try {
-        const status = await apiService.checkServerStatus();
-        setServerStatus({
+        const status = await apiService.checkServiceStatus();
+        setServiceStatus({
           status: status.isRunning ? 'ready' : 'offline',
           modelAvailable: status.modelAvailable
         });
@@ -65,7 +65,7 @@ export default function HomeScreen() {
         }
       } catch (error) {
         console.error("Error initializing mock service:", error);
-        setServerStatus({
+        setServiceStatus({
           status: 'offline',
           modelAvailable: false
         });
@@ -84,8 +84,8 @@ export default function HomeScreen() {
       const isConnected = state.isConnected && 
         (state.type === 'cellular' || state.type === 'wifi');
       
-      // Update server status based on connection state
-      setServerStatus(prevStatus => {
+      // Update service status based on connection state
+      setServiceStatus(prevStatus => {
         // Only update if connection state actually changed
         // or if we're currently in 'processing' state
         if ((isConnected && prevStatus.status === 'offline') || 
@@ -103,7 +103,7 @@ export default function HomeScreen() {
       });
       
       // Show an alert if connection is lost while not processing
-      if (!isConnected && serverStatus.status === 'ready') {
+      if (!isConnected && serviceStatus.status === 'ready') {
         Alert.alert(
           'Connection Lost',
           'Internet connection lost. The sign recognition model requires internet access.',
@@ -111,7 +111,7 @@ export default function HomeScreen() {
         );
       } 
       // Show reconnected message if connection is restored
-      else if (isConnected && serverStatus.status === 'offline') {
+      else if (isConnected && serviceStatus.status === 'offline') {
         Alert.alert(
           'Connected',
           'Internet connection restored. The sign recognition model is now available.',
@@ -124,7 +124,7 @@ export default function HomeScreen() {
     return () => {
       unsubscribe();
     };
-  }, [serverStatus.status]);
+  }, [serviceStatus.status]);
 
   // Handle Android back button to close modal
   useEffect(() => {
@@ -187,7 +187,7 @@ export default function HomeScreen() {
   // Pick video from library
   const pickVideo = async () => {
     // Check current connection status
-    if (serverStatus.status === 'offline') {
+    if (serviceStatus.status === 'offline') {
       Alert.alert(
         'No Internet Connection',
         'The sign recognition model requires internet access. Please connect to the internet and try again.',
@@ -229,7 +229,7 @@ export default function HomeScreen() {
       setIsRecording(false);
     } else {
       // Check current connection status
-      if (serverStatus.status === 'offline') {
+      if (serviceStatus.status === 'offline') {
         Alert.alert(
           'No Internet Connection',
           'The sign recognition model requires internet access. Please connect to the internet and try again.',
@@ -265,7 +265,7 @@ export default function HomeScreen() {
   const processVideo = async (videoUri: string) => {
     try {
       setProcessing(true);
-      setServerStatus({
+      setServiceStatus({
         status: 'processing',
         modelAvailable: true
       });
@@ -289,8 +289,8 @@ export default function HomeScreen() {
       setIsCameraActive(false);
       setModalVisible(true);
       
-      // Update server status based on the result
-      setServerStatus({
+      // Update service status based on the result
+      setServiceStatus({
         status: 'ready',
         modelAvailable: true
       });
@@ -302,7 +302,7 @@ export default function HomeScreen() {
         'Failed to process video. Please try again.',
         [{ text: 'OK' }]
       );
-      setServerStatus({
+      setServiceStatus({
         status: 'ready',
         modelAvailable: true
       });
@@ -313,7 +313,7 @@ export default function HomeScreen() {
   const processVideoRecorded = async (videoUri: string) => {
     try {
       setProcessing(true);
-      setServerStatus({
+      setServiceStatus({
         status: 'processing',
         modelAvailable: true
       });
@@ -337,8 +337,8 @@ export default function HomeScreen() {
       setIsCameraActive(false);
       setModalVisible(true);
       
-      // Update server status based on the result
-      setServerStatus({
+      // Update service status based on the result
+      setServiceStatus({
         status: 'ready',
         modelAvailable: true
       });
@@ -350,7 +350,7 @@ export default function HomeScreen() {
         'Failed to process video. Please try again.',
         [{ text: 'OK' }]
       );
-      setServerStatus({
+      setServiceStatus({
         status: 'ready',
         modelAvailable: true
       });
@@ -368,7 +368,7 @@ export default function HomeScreen() {
 
   // Add a reconnect function to check internet connection
   const checkInternetConnection = async () => {
-    setServerStatus({
+    setServiceStatus({
       status: 'processing',
       modelAvailable: false
     });
@@ -402,7 +402,7 @@ export default function HomeScreen() {
       // Final connection status
       const isConnected = isNetInfoConnected && isFetchSuccessful;
       
-      setServerStatus({
+      setServiceStatus({
         status: isConnected ? 'ready' : 'offline',
         modelAvailable: isConnected
       });
@@ -422,7 +422,7 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('Connection check failed:', error);
-      setServerStatus({
+      setServiceStatus({
         status: 'offline',
         modelAvailable: false
       });
@@ -471,27 +471,27 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="black" />
 
-      {/* Local processing status indicator */}
-      <View style={styles.serverStatusContainer}>
+      {/* API status indicator */}
+      <View style={styles.serviceStatusContainer}>
         <View style={[
           styles.statusIndicator,
-          serverStatus.status === 'ready' 
+          serviceStatus.status === 'ready' 
             ? styles.statusOnline 
-            : serverStatus.status === 'offline'
+            : serviceStatus.status === 'offline'
               ? styles.statusOffline
               : styles.statusChecking
         ]} />
         <Text style={styles.statusText}>
           Status: {
-            serverStatus.status === 'ready' 
+            serviceStatus.status === 'ready' 
               ? 'Ready' 
-              : serverStatus.status === 'offline'
+              : serviceStatus.status === 'offline'
                 ? 'No Internet'
                 : 'Processing...'
           }
         </Text>
-        {serverStatus.status === 'processing' && <ActivityIndicator size="small" color="#fff" />}
-        {serverStatus.status === 'offline' && (
+        {serviceStatus.status === 'processing' && <ActivityIndicator size="small" color="#fff" />}
+        {serviceStatus.status === 'offline' && (
           <TouchableOpacity onPress={checkInternetConnection} style={styles.reconnectButton}>
             <Text style={styles.reconnectText}>Retry</Text>
           </TouchableOpacity>
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  serverStatusContainer: {
+  serviceStatusContainer: {
     position: 'absolute',
     top: 10,
     right: 10,

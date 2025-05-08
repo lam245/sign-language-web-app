@@ -1,0 +1,1025 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASL Recognition with Translation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Updated Pink Color Palette */
+            --primary: #E7A1A7;         /* Main pink */
+            --primary-light: #F4C7CB;   /* Lighter pink for hover states */
+            --primary-dark: #D47A80;    /* Deeper pink for emphasis */
+            --secondary: #E78FB0;       /* Complementary pink-purple */
+            --secondary-light: #F4B8C9; /* Lighter secondary for accents */
+            --secondary-dark: #D47498;  /* Deeper secondary for contrast */
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --accent: #E78FB0;          /* Changed to match secondary for consistency */
+            --success: #E79ED1;         /* Pink-purple success */
+            --warning: #f59e0b;
+            --info: #E78FB0;            /* Changed to match secondary for consistency */
+            --neutral-50: #fafafa;
+            --neutral-100: #f5f5f5;
+            --neutral-200: #e5e5e5;
+            --neutral-300: #d4d4d4;
+            --neutral-700: #404040;
+            --neutral-800: #262626;
+            --neutral-900: #171717;
+            --gold: #f59e0b;
+            --platinum: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+        
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 40% 20%, rgba(231, 161, 167, 0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(231, 143, 176, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(231, 158, 209, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            color: var(--dark);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.05),
+                0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+        }
+        
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--secondary), var(--success));
+        }
+        
+        .logo-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .app-logo {
+            height: 60px;
+            width: auto;
+            margin-right: 15px;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(231, 161, 167, 0.3);
+            border: 3px solid white;
+            transition: all 0.3s ease;
+        }
+        
+        .app-logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(231, 161, 167, 0.4);
+        }
+        
+        .app-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+            font-size: 3.5rem;
+            margin-bottom: 0;
+            background: linear-gradient(to right, var(--primary-dark), var(--secondary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        .app-subtitle {
+            font-weight: 400;
+            font-size: 1.1rem;
+            color: var(--neutral-700);
+            max-width: 700px;
+            margin: 0 auto;
+            letter-spacing: 0.3px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.05),
+                0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            font-weight: 600;
+            padding: 20px 25px;
+            border: none;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2));
+            transform: skewX(-30deg) translateX(70%);
+            transition: all 0.5s ease;
+        }
+        
+        .card:hover .card-header::after {
+            transform: skewX(-30deg) translateX(200%);
+        }
+        
+        .video-container {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 20px;
+            height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--success), var(--info), var(--primary));
+            background-size: 400%;
+            z-index: -1;
+            border-radius: 18px;
+            animation: glowing 20s linear infinite;
+            opacity: 0.5;
+            filter: blur(10px);
+        }
+        
+        @keyframes glowing {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+        
+        .video-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+        
+        .controls {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            height: 100%;
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-container {
+            margin-bottom: 20px;
+            padding: 30px;
+            background-color: var(--neutral-100);
+            border-radius: 16px;
+            border: 2px dashed var(--platinum);
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.02);
+        }
+        
+        .upload-container:hover {
+            border-color: var(--primary);
+            background-color: rgba(231, 161, 167, 0.05);
+            box-shadow: inset 0 0 20px rgba(231, 161, 167, 0.05);
+        }
+        
+        .or-divider {
+            display: flex;
+            align-items: center;
+            margin: 35px 0;
+        }
+        
+        .or-divider:before, .or-divider:after {
+            content: "";
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--neutral-300), transparent);
+        }
+        
+        .or-divider span {
+            padding: 0 20px;
+            color: var(--neutral-700);
+            font-weight: 500;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .webcam-container {
+            padding: 30px;
+            background-color: var(--neutral-100);
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.02);
+        }
+        
+        .webcam-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(231, 161, 167, 0.05), transparent);
+            z-index: -1;
+        }
+        
+        .detection-controls {
+            background-color: var(--neutral-50);
+            padding: 25px;
+            border-radius: 16px;
+            margin: 20px;
+            text-align: center;
+            border: 1px solid var(--neutral-200);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detection-controls::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .detection-controls h5 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: var(--neutral-800);
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.5s ease;
+            z-index: -1;
+        }
+        
+        .btn:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        
+        .btn:hover, .btn:focus {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        }
+        
+        .btn-danger:hover, .btn-danger:focus {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        }
+        
+        .btn-success:hover, .btn-success:focus {
+            background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--secondary) 100%);
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, var(--success) 0%, #D476B9 100%);
+        }
+        
+        .btn-start:hover, .btn-start:focus {
+            background: linear-gradient(135deg, #D476B9 0%, #C55BA8 100%);
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        }
+        
+        .btn-stop:hover, .btn-stop:focus {
+            background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+        }
+        
+        .translation-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.05),
+                0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            height: 100%;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .translation-header {
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid var(--neutral-200);
+            padding-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .translation-panel {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 60px);
+            gap: 20px;
+        }
+        
+        .translation-section {
+            flex: 1;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow-y: auto;
+            max-height: 200px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .translation-section:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .en-section {
+            background-color: rgba(231, 143, 176, 0.07);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .vi-section {
+            background-color: rgba(231, 158, 209, 0.07);
+            border-left: 4px solid var(--success);
+        }
+        
+        .lang-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: 1.5px;
+            color: var(--neutral-700);
+            display: flex;
+            align-items: center;
+        }
+        
+        .lang-label i {
+            margin-right: 8px;
+            font-size: 1rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 50%;
+        }
+        
+        .sign-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            margin: 12px 0;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sign-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+        
+        .sign-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+        
+        .sign-rank {
+            font-weight: 700;
+            color: white;
+            margin-right: 15px;
+            font-size: 1rem;
+            min-width: 35px;
+            height: 35px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(231, 161, 167, 0.2);
+        }
+        
+        .sign-text {
+            font-weight: 500;
+            color: var(--neutral-800);
+            flex: 1;
+            font-size: 1.05rem;
+        }
+        
+        .status-message {
+            margin: 15px 0 25px;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.8s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-error {
+            background-color: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #b91c1c;
+        }
+        
+        .status-info {
+            background-color: rgba(231, 161, 167, 0.08);
+            border: 1px solid rgba(231, 161, 167, 0.2);
+            color: #D47A80;
+        }
+        
+        .status-message i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .status-error i {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .status-info i {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .form-control {
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid var(--neutral-300);
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(231, 161, 167, 0.2);
+            background-color: white;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--neutral-700);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .icon-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .predictions {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.05),
+                0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .predictions h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--neutral-200);
+            padding-bottom: 12px;
+            position: relative;
+        }
+        
+        .predictions h3::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .predictions h5 {
+            font-weight: 600;
+            color: var(--neutral-800);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .predictions h5 i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 50%;
+        }
+        
+        /* Card hover effect */
+        .card-hover-effect {
+            transition: all 0.5s ease;
+        }
+        
+        .card-hover-effect:hover {
+            box-shadow: 
+                0px 0px 0px 3px rgba(231, 161, 167, 0.1),
+                0px 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 0.8);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary-light), var(--secondary-light));
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 161, 167, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 161, 167, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 161, 167, 0); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 992px) {
+            .main-container {
+                padding: 20px 15px;
+            }
+            
+            .app-title {
+                font-size: 2.5rem;
+            }
+            
+            .app-header {
+                padding: 2rem 1.5rem;
+            }
+            
+            .video-container {
+                height: 320px;
+                margin: 15px;
+            }
+            
+            .translation-section {
+                max-height: 150px;
+            }
+            
+            .detection-controls {
+                margin: 15px;
+                padding: 20px;
+            }
+            
+            .predictions {
+                padding: 25px;
+            }
+            
+            .logo-title-container {
+                flex-direction: column;
+            }
+            
+            .app-logo {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+        
+        /* Premium elements */
+        .premium-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(231, 161, 167, 0.3);
+            z-index: 10;
+        }
+        
+        .diamond-pattern {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 0% 0%, transparent 9px, rgba(255, 255, 255, 0.03) 10px, transparent 11px),
+                radial-gradient(circle at 100% 0%, transparent 9px, rgba(255, 255, 255, 0.03) 10px, transparent 11px),
+                radial-gradient(circle at 100% 100%, transparent 9px, rgba(255, 255, 255, 0.03) 10px, transparent 11px),
+                radial-gradient(circle at 0% 100%, transparent 9px, rgba(255, 255, 255, 0.03) 10px, transparent 11px);
+            background-size: 50px 50px;
+            background-position: 0 0;
+            z-index: 1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        /* Logo animation */
+        @keyframes logoGlow {
+            0% { box-shadow: 0 0 5px rgba(231, 161, 167, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(231, 161, 167, 0.8), 0 0 25px rgba(231, 143, 176, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(231, 161, 167, 0.5); }
+        }
+        
+        .app-logo {
+            animation: logoGlow 3s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="app-header">
+            <div class="logo-title-container">
+                <img src="{{ url_for('static', filename='assets/images/logo.jpg') }}" alt="SilentTalk Logo" class="app-logo">
+                <h1 class="app-title">Silent Talk</h1>
+            </div>
+            <p class="app-subtitle">Detect signs in real-time with English and Vietnamese translations</p>
+        </div>
+        {% if error %}
+        <div class="status-message status-error">
+            <i class="fas fa-exclamation-circle me-2"></i> <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+        
+        {% if message %}
+        <div class="status-message status-info">
+            <i class="fas fa-info-circle me-2"></i> <strong>Status:</strong> {{ message }}
+        </div>
+        {% endif %}
+
+        <div class="row gx-4 gy-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-video me-2"></i> Video Feed
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="video-container">
+                            
+                            <img src="{{ url_for('video_feed') }}" alt="Video Stream">
+                        </div>
+                        
+                        <!-- Detection Controls - Added based on Flask backend requirements -->
+                        <div class="detection-controls">
+                            <h5 class="mb-3"><i class="fas fa-hand-point-up me-2"></i>Sign Detection Controls</h5>
+                            <div class="d-flex justify-content-center gap-3">
+                                <button id="startDetection" class="btn btn-start">
+                                    <span class="icon-text">
+                                        <i class="fas fa-play-circle"></i>
+                                        <span>Start Detection</span>
+                                    </span>
+                                </button>
+                                <button id="stopDetection" class="btn btn-stop">
+                                    <span class="icon-text">
+                                        <i class="fas fa-stop-circle"></i>
+                                        <span>Stop & Translate</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Translation Container -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-language me-2"></i> Live Translations
+                    </div>
+                    <div class="card-body">
+                        <div class="translation-panel">
+                            <div class="translation-section en-section">
+                                <div class="lang-label"><i class="fas fa-globe-americas me-2"></i>English</div>
+                                <div id="english-translation">
+                                    {% if english_text %}
+                                    <p>{{ english_text }}</p>
+                                    {% else %}
+                                    <p class="text-muted">ASL signs will appear here in English</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="translation-section vi-section">
+                                <div class="lang-label"><i class="fas fa-globe-asia me-2"></i>Vietnamese</div>
+                                <div id="vietnamese-translation">
+                                    {% if vietnamese_text %}
+                                    <p>{{ vietnamese_text }}</p>
+                                    {% else %}
+                                    <p class="text-muted">Dịch từ ngôn ngữ ký hiệu sẽ xuất hiện ở đây</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <form action="{{ url_for('recordingASL') }}" method="post" enctype="multipart/form-data" class="controls card">
+                    <div class="card-header">
+                        <i class="fas fa-cogs me-2"></i> Controls
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-container">
+                            <h4 class="mb-3"><i class="fas fa-file-video me-2"></i>Upload a Video</h4>
+                            <div class="mb-3">
+                                <label for="videoFile" class="form-label">Select video file</label>
+                                <input class="form-control" type="file" id="videoFile" name="file" accept="video/mp4,video/avi,video/quicktime,video/webm">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" name="submit-upload" value="Upload">
+                                <span class="icon-text">
+                                    <i class="fas fa-upload"></i>
+                                    <span>Upload and Process</span>
+                                </span>
+                            </button>
+                        </div>
+
+                        <div class="or-divider">
+                            <span>OR</span>
+                        </div>
+
+                        <div class="webcam-container">
+                            <h4 class="mb-3"><i class="fas fa-webcam me-2"></i>Use Webcam</h4>
+                            <div class="d-grid gap-3">
+                                <button class="btn btn-success" type="submit" name="submit-1" value="Start Webcam">
+                                    <span class="icon-text">
+                                        <i class="fas fa-play"></i>
+                                        <span>Start Webcam</span>
+                                    </span>
+                                </button>
+                                <button class="btn btn-danger" type="submit" name="submit-2" value="Stop">
+                                    <span class="icon-text">
+                                        <i class="fas fa-stop"></i>
+                                        <span>Stop and Analyze</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if preds %}
+        <div class="predictions">
+            <h3><i class="fas fa-list-ol me-2"></i>Detected Signs</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3"><i class="fas fa-globe-americas me-2"></i>English</h5>
+                    <div class="prediction-list">
+                        {% for pred in preds %}
+                        <div class="sign-item">
+                            <div class="sign-rank">#{{ loop.index }}</div>
+                            <div class="sign-text">{{ pred }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="mb-3"><i class="fas fa-globe-asia me-2"></i>Vietnamese</h5>
+                    <div class="prediction-list">
+                        {% if vietnamese_text %}
+                        <div class="sign-item">
+                            <div class="sign-text">{{ vietnamese_text }}</div>
+                        </div>
+                        {% else %}
+                        <div class="sign-item">
+                            <div class="sign-text text-muted">No translation available</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add functionality for the detection controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('startDetection');
+            const stopButton = document.getElementById('stopDetection');
+            const englishTranslation = document.getElementById('english-translation');
+            const vietnameseTranslation = document.getElementById('vietnamese-translation');
+            
+            // Function to toggle detection on/off
+            function toggleDetection(action) {
+                fetch('/toggle_detection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=${action}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'stopped') {
+                        if (data.english) {
+                            englishTranslation.innerHTML = `<p>${data.english}</p>`;
+                        }
+                        if (data.vietnamese) {
+                            vietnameseTranslation.innerHTML = `<p>${data.vietnamese}</p>`;
+                        }
+                    } else if (data.status === 'error') {
+                        console.error('Error toggling detection:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Event listeners for start and stop buttons
+            if (startButton) {
+                startButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default form submission
+                    toggleDetection('start');
+                    startButton.classList.add('disabled');
+                    stopButton.classList.remove('disabled');
+                });
+            }
+            
+            if (stopButton) {
+                stopButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default form submission
+                    toggleDetection('stop');
+                    stopButton.classList.add('disabled');
+                    startButton.classList.remove('disabled');
+                });
+            }
+            
+            // Scroll to bottom of translation sections for latest content
+            if (englishTranslation) {
+                englishTranslation.scrollTop = englishTranslation.scrollHeight;
+            }
+            
+            if (vietnameseTranslation) {
+                vietnameseTranslation.scrollTop = vietnameseTranslation.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
